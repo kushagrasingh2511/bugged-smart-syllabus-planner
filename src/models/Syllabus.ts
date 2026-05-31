@@ -24,6 +24,7 @@ const syllabusSchema = new Schema(
       enum: ["pending", "processing", "completed", "failed"],
       default: "pending",
     },
+    extractionError: { type: String },
   },
   { timestamps: true },
 );

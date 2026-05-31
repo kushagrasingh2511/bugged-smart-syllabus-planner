@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# uploaded syllabus files (local dev storage)
+/uploads
+
+# kiro (local specs / IDE)
+.kiro/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

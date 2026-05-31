@@ -9,6 +9,7 @@ const subjectSchema = new Schema(
       default: () => crypto.randomUUID(),
     },
     userId: { type: String, required: true, index: true },
+    syllabusId: { type: String, index: true },
     subjectName: { type: String, required: true, trim: true },
   },
   { timestamps: true },

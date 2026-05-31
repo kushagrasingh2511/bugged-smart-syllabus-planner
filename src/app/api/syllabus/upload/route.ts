@@ -6,6 +6,8 @@ import {
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
 } from "@/lib/validations/syllabus";
+import { saveSyllabusFile } from "@/lib/storage/syllabus-files";
+import { scheduleSyllabusExtraction } from "@/lib/syllabus/run-extraction";
 import Syllabus from "@/models/Syllabus";
 
 export async function POST(request: Request) {
@@ -63,14 +65,22 @@ export async function POST(request: Request) {
 
     await connectDB();
 
-    // Create syllabus record (file storage/cloud upload can be wired in later)
     const syllabus = await Syllabus.create({
       userId: session.userId,
       title: title.trim(),
       sourceType: "pdf",
-      // fileUrl will be set once cloud storage is integrated
       extractionStatus: "pending",
     });
+
+    const fileUrl = await saveSyllabusFile(
+      session.userId,
+      syllabus.syllabusId,
+      file,
+    );
+    syllabus.fileUrl = fileUrl;
+    await syllabus.save();
+
+    scheduleSyllabusExtraction(syllabus.syllabusId, session.userId);
 
     return jsonSuccess(
       {
@@ -79,9 +89,11 @@ export async function POST(request: Request) {
           title: syllabus.title,
           sourceType: syllabus.sourceType,
           extractionStatus: syllabus.extractionStatus,
+          fileUrl: syllabus.fileUrl,
           createdAt: syllabus.createdAt,
         },
-        message: "PDF uploaded successfully. Extraction is pending.",
+        message:
+          "PDF uploaded successfully. Extraction has started in the background.",
       },
       201,
     );

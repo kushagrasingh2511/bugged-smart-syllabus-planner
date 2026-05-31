@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { handleApiError, jsonError, jsonSuccess } from "@/lib/api";
 import { manualSyllabusSchema } from "@/lib/validations/syllabus";
+import { scheduleSyllabusExtraction } from "@/lib/syllabus/run-extraction";
 import Syllabus from "@/models/Syllabus";
 
 export async function POST(request: Request) {
@@ -24,15 +25,15 @@ export async function POST(request: Request) {
 
     await connectDB();
 
-    // Create syllabus record with raw content stored directly
     const syllabus = await Syllabus.create({
       userId: session.userId,
       title: parsed.title,
       sourceType: "manual",
       rawContent: parsed.rawContent,
-      // Manual entries are immediately ready for extraction
       extractionStatus: "pending",
     });
+
+    scheduleSyllabusExtraction(syllabus.syllabusId, session.userId);
 
     return jsonSuccess(
       {
@@ -43,7 +44,8 @@ export async function POST(request: Request) {
           extractionStatus: syllabus.extractionStatus,
           createdAt: syllabus.createdAt,
         },
-        message: "Syllabus saved successfully. Extraction is pending.",
+        message:
+          "Syllabus saved successfully. Extraction has started in the background.",
       },
       201,
     );
