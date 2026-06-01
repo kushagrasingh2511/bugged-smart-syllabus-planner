@@ -1,16 +1,40 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
+import {
+  getGeminiApiVersion,
+  resolveGeminiApiKey,
+  syncGeminiEnvVars,
+} from "@/lib/gemini/auth";
+
+// flash-lite has a separate free-tier quota from gemini-2.0-flash
+const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash-lite";
+
+let cachedClient: GoogleGenAI | null = null;
 
 export function getGeminiApiKey(): string {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key?.trim()) {
-    throw new Error("GEMINI_API_KEY is not configured");
-  }
-  return key.trim();
+  return resolveGeminiApiKey();
 }
 
-export function getGeminiModel(modelName = DEFAULT_MODEL) {
-  const client = new GoogleGenerativeAI(getGeminiApiKey());
-  return client.getGenerativeModel({ model: modelName });
+export function getGeminiModelName(): string {
+  return DEFAULT_MODEL;
+}
+
+/**
+ * Native Gemini Developer API client.
+ * AQ and AIza keys both authenticate via x-goog-api-key (handled by the SDK).
+ */
+export function getGeminiClient(): GoogleGenAI {
+  if (!cachedClient) {
+    syncGeminiEnvVars();
+    const apiKey = resolveGeminiApiKey();
+
+    cachedClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        apiVersion: getGeminiApiVersion(),
+      },
+    });
+  }
+
+  return cachedClient;
 }

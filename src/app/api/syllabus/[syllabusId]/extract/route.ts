@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth";
-import { handleApiError, jsonError, jsonSuccess } from "@/lib/api";
+import { jsonError, jsonSuccess } from "@/lib/api";
+import { formatGeminiError, isGeminiQuotaError } from "@/lib/gemini/errors";
 import { runSyllabusExtraction } from "@/lib/syllabus/run-extraction";
 
 type RouteContext = {
@@ -35,10 +36,16 @@ export async function POST(_request: Request, context: RouteContext) {
       ) {
         return jsonError(error.message, 409);
       }
-      if (error.message === "GEMINI_API_KEY is not configured") {
+      if (error.message.includes("not configured")) {
         return jsonError(error.message, 503);
       }
+      if (isGeminiQuotaError(error)) {
+        return jsonError(formatGeminiError(error), 429);
+      }
+      if (error.message.length < 600) {
+        return jsonError(error.message, 502);
+      }
     }
-    return handleApiError(error);
+    return jsonError(formatGeminiError(error), 502);
   }
 }

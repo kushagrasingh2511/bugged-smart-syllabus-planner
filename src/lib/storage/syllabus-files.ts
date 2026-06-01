@@ -2,7 +2,7 @@ import { mkdir, writeFile, readFile } from "fs/promises";
 import path from "path";
 
 const UPLOAD_ROOT =
-  process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
+  process.env.UPLOAD_DIR ?? path.join(/* turbopackIgnore: true */ process.cwd(), "uploads");
 
 function safeSegment(value: string): string {
   return value.replace(/[^a-zA-Z0-9-_]/g, "_");
@@ -26,7 +26,7 @@ export function buildStoredFilePath(
 
 export function resolveStoredFilePath(relativePath: string): string {
   const normalized = relativePath.replace(/^[/\\]+/, "");
-  const absolute = path.resolve(process.cwd(), normalized);
+  const absolute = path.resolve(/* turbopackIgnore: true */ process.cwd(), normalized);
   const uploadRoot = path.resolve(getUploadRoot());
   if (!absolute.startsWith(uploadRoot)) {
     throw new Error("Invalid file path");

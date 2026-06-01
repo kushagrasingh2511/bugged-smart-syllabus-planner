@@ -47,6 +47,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     try {
       const response = await fetch(`/api/auth/${mode}`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -80,7 +81,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             : "Start planning smarter — it only takes a minute."}
         </CardDescription>
       </CardHeader>
-      <form onSubmit={onSubmit}>
+      <form method="post" onSubmit={onSubmit}>
         <CardContent className="space-y-4">
           {!isLogin ? (
             <div className="space-y-2">

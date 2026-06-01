@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-
 import { SESSION_COOKIE } from "@/lib/constants";
 import { jsonSuccess } from "@/lib/api";
 

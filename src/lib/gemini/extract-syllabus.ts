@@ -1,6 +1,6 @@
-import type { Part } from "@google/generative-ai";
+import type { Part } from "@google/genai";
 
-import { getGeminiModel } from "@/lib/gemini/client";
+import { getGeminiClient, getGeminiModelName } from "@/lib/gemini/client";
 import {
   extractionResultSchema,
   type ExtractionResult,
@@ -28,15 +28,23 @@ function parseJsonResponse(text: string): ExtractionResult {
 }
 
 async function generateStructuredExtraction(parts: Part[]): Promise<ExtractionResult> {
-  const model = getGeminiModel();
-  const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: EXTRACTION_PROMPT }, ...parts] }],
-    generationConfig: {
+  const ai = getGeminiClient();
+  const response = await ai.models.generateContent({
+    model: getGeminiModelName(),
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: EXTRACTION_PROMPT }, ...parts],
+      },
+    ],
+    config: {
       responseMimeType: "application/json",
+      maxOutputTokens: 512,
       temperature: 0.2,
     },
   });
-  const text = result.response.text();
+
+  const text = response.text;
   if (!text) {
     throw new Error("Empty response from Gemini");
   }
