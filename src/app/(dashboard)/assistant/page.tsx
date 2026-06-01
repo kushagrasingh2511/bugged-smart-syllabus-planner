@@ -1,30 +1,26 @@
 import type { Metadata } from "next";
-import { Bot } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { PlaceholderPanel } from "@/components/shared/placeholder-panel";
+import { ChatWindow } from "@/components/assistant/chat-window";
 
 export const metadata: Metadata = {
   title: "AI Assistant",
 };
 
-export default function AssistantPage() {
+export default async function AssistantPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const initialQuestion = typeof q === "string" ? decodeURIComponent(q) : undefined;
+
   return (
     <DashboardShell
       title="AI study assistant"
       description="Ask study questions, get daily suggestions, and emergency recovery plans."
     >
-      <PlaceholderPanel
-        icon={Bot}
-        phase={6}
-        title="Assistant module"
-        description="Phase 6 will integrate Google Gemini for conversational academic help."
-        steps={[
-          "Ask study-related questions",
-          "Get daily task suggestions",
-          "Generate emergency recovery plans",
-        ]}
-      />
+      <ChatWindow initialQuestion={initialQuestion} />
     </DashboardShell>
   );
 }

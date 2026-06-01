@@ -11,6 +11,7 @@ import {
   Target,
 } from "lucide-react";
 
+import { AiSuggestionCard } from "@/components/dashboard/ai-suggestion-card";
 import { RecoveryPanel } from "@/components/dashboard/recovery-panel";
 import { RevisionOverview } from "@/components/dashboard/revision-overview";
 import { UpcomingTasks } from "@/components/dashboard/upcoming-tasks";
@@ -100,6 +101,8 @@ export default async function DashboardPage() {
         {recovery ? <RecoveryPanel initial={recovery} /> : null}
 
         {revisions ? <RevisionOverview buckets={revisions} /> : null}
+
+        <AiSuggestionCard />
 
         <section>
           <div className="mb-4">
