@@ -9,8 +9,10 @@ import {
   FileText,
   Loader2,
   PenLine,
+  Plus,
   RefreshCw,
   Sparkles,
+  Trash2,
   Upload,
 } from "lucide-react";
 
@@ -86,6 +88,7 @@ export function SyllabusManager() {
   const [loadingList, setLoadingList] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -95,6 +98,12 @@ export function SyllabusManager() {
   const [rawContent, setRawContent] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  // Inline add state
+  const [addingSubjectFor, setAddingSubjectFor] = useState<string | null>(null);
+  const [newSubjectName, setNewSubjectName] = useState("");
+  const [addingTopicFor, setAddingTopicFor] = useState<string | null>(null);
+  const [newTopicName, setNewTopicName] = useState("");
 
   const loadSyllabi = useCallback(async () => {
     const response = await fetch("/api/syllabus");
@@ -298,6 +307,105 @@ export function SyllabusManager() {
 
   function toggleExpand(syllabusId: string) {
     setExpandedId((current) => (current === syllabusId ? null : syllabusId));
+  }
+
+  async function handleDeleteSyllabus(syllabusId: string) {
+    if (!confirm("Delete this syllabus and all its subjects/topics?")) return;
+    setDeletingId(syllabusId);
+    try {
+      const res = await fetch(`/api/syllabus/${syllabusId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await readApiError(res));
+      setSubjectsBySyllabus((prev) => { const n = { ...prev }; delete n[syllabusId]; return n; });
+      if (expandedId === syllabusId) setExpandedId(null);
+      setMessage({ type: "success", text: "Syllabus deleted." });
+      await refreshList();
+    } catch (e) {
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Delete failed" });
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleDeleteSubject(syllabusId: string, subjectId: string) {
+    if (!confirm("Delete this subject and all its topics?")) return;
+    setDeletingId(subjectId);
+    try {
+      const res = await fetch(`/api/subjects/${subjectId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await readApiError(res));
+      const subjects = await loadSubjects(syllabusId);
+      setSubjectsBySyllabus((prev) => ({ ...prev, [syllabusId]: subjects }));
+      setMessage({ type: "success", text: "Subject deleted." });
+    } catch (e) {
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Delete failed" });
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleDeleteTopic(syllabusId: string, topicId: string) {
+    if (!confirm("Delete this topic?")) return;
+    setDeletingId(topicId);
+    try {
+      const res = await fetch(`/api/topics/${topicId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await readApiError(res));
+      const subjects = await loadSubjects(syllabusId);
+      setSubjectsBySyllabus((prev) => ({ ...prev, [syllabusId]: subjects }));
+    } catch (e) {
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Delete failed" });
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleAddSubject(syllabusId: string) {
+    if (!newSubjectName.trim()) return;
+    try {
+      const res = await fetch("/api/subjects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ syllabusId, subjectName: newSubjectName.trim() }),
+      });
+      if (!res.ok) throw new Error(await readApiError(res));
+      setNewSubjectName("");
+      setAddingSubjectFor(null);
+      const subjects = await loadSubjects(syllabusId);
+      setSubjectsBySyllabus((prev) => ({ ...prev, [syllabusId]: subjects }));
+    } catch (e) {
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Failed to add subject" });
+    }
+  }
+
+  async function handleAddTopic(syllabusId: string, subjectId: string) {
+    if (!newTopicName.trim()) return;
+    try {
+      const res = await fetch("/api/topics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subjectId, topicName: newTopicName.trim(), difficulty: 3 }),
+      });
+      if (!res.ok) throw new Error(await readApiError(res));
+      setNewTopicName("");
+      setAddingTopicFor(null);
+      const subjects = await loadSubjects(syllabusId);
+      setSubjectsBySyllabus((prev) => ({ ...prev, [syllabusId]: subjects }));
+    } catch (e) {
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Failed to add topic" });
+    }
+  }
+
+  async function handleUpdateTopicStatus(syllabusId: string, topicId: string, status: string) {
+    try {
+      const res = await fetch(`/api/topics/${topicId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error(await readApiError(res));
+      const subjects = await loadSubjects(syllabusId);
+      setSubjectsBySyllabus((prev) => ({ ...prev, [syllabusId]: subjects }));
+    } catch (e) {
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Update failed" });
+    }
   }
 
   const tabs: { id: UploadTab; label: string; icon: typeof PenLine }[] = [
@@ -509,7 +617,7 @@ export function SyllabusManager() {
                 return (
                   <li
                     key={item.syllabusId}
-                    className="rounded-xl border border-border/80 bg-muted/20"
+                    className="relative rounded-xl border border-border/80 bg-muted/20"
                   >
                     <button
                       type="button"
@@ -537,6 +645,23 @@ export function SyllabusManager() {
                         </p>
                       </div>
                     </button>
+                    <div className="absolute right-3 top-3">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-7 text-muted-foreground hover:text-destructive"
+                        disabled={deletingId === item.syllabusId}
+                        onClick={(e) => { e.stopPropagation(); void handleDeleteSyllabus(item.syllabusId); }}
+                        title="Delete syllabus"
+                      >
+                        {deletingId === item.syllabusId ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-3.5" />
+                        )}
+                      </Button>
+                    </div>
 
                     {expanded ? (
                       <div className="border-t border-border/60 px-4 pb-4 pt-2">
@@ -587,24 +712,117 @@ export function SyllabusManager() {
                               <div className="space-y-4">
                                 {subjects.map((subject) => (
                                   <div key={subject.subjectId}>
-                                    <h4 className="text-sm font-semibold">
-                                      {subject.subjectName}
-                                    </h4>
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-sm font-semibold">
+                                        {subject.subjectName}
+                                      </h4>
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          type="button"
+                                          size="icon"
+                                          variant="ghost"
+                                          className="size-6 text-muted-foreground hover:text-primary"
+                                          title="Add topic"
+                                          onClick={() => { setAddingTopicFor(subject.subjectId); setNewTopicName(""); }}
+                                        >
+                                          <Plus className="size-3.5" />
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          size="icon"
+                                          variant="ghost"
+                                          className="size-6 text-muted-foreground hover:text-destructive"
+                                          disabled={deletingId === subject.subjectId}
+                                          title="Delete subject"
+                                          onClick={() => void handleDeleteSubject(item.syllabusId, subject.subjectId)}
+                                        >
+                                          {deletingId === subject.subjectId ? (
+                                            <Loader2 className="size-3 animate-spin" />
+                                          ) : (
+                                            <Trash2 className="size-3" />
+                                          )}
+                                        </Button>
+                                      </div>
+                                    </div>
                                     <ul className="mt-2 space-y-1.5">
                                       {subject.topics.map((topic) => (
                                         <li
                                           key={topic.topicId}
                                           className="flex items-center justify-between gap-2 rounded-lg bg-background/80 px-3 py-2 text-sm"
                                         >
-                                          <span>{topic.topicName}</span>
+                                          <span className="flex-1">{topic.topicName}</span>
+                                          <select
+                                            className="rounded border border-border bg-transparent px-1.5 py-0.5 text-xs text-muted-foreground"
+                                            value={topic.status ?? "pending"}
+                                            onChange={(e) => void handleUpdateTopicStatus(item.syllabusId, topic.topicId, e.target.value)}
+                                          >
+                                            <option value="pending">Pending</option>
+                                            <option value="in_progress">In Progress</option>
+                                            <option value="completed">Completed</option>
+                                          </select>
                                           <span className="shrink-0 text-xs text-muted-foreground">
-                                            Difficulty {topic.difficulty}/5
+                                            ★ {topic.difficulty}/5
                                           </span>
+                                          <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="ghost"
+                                            className="size-5 text-muted-foreground hover:text-destructive"
+                                            disabled={deletingId === topic.topicId}
+                                            title="Delete topic"
+                                            onClick={() => void handleDeleteTopic(item.syllabusId, topic.topicId)}
+                                          >
+                                            {deletingId === topic.topicId ? (
+                                              <Loader2 className="size-3 animate-spin" />
+                                            ) : (
+                                              <Trash2 className="size-3" />
+                                            )}
+                                          </Button>
                                         </li>
                                       ))}
+                                      {addingTopicFor === subject.subjectId && (
+                                        <li className="flex items-center gap-2 rounded-lg bg-background/80 px-3 py-2">
+                                          <Input
+                                            placeholder="Topic name"
+                                            value={newTopicName}
+                                            onChange={(e) => setNewTopicName(e.target.value)}
+                                            className="h-7 text-sm"
+                                            onKeyDown={(e) => { if (e.key === "Enter") void handleAddTopic(item.syllabusId, subject.subjectId); if (e.key === "Escape") setAddingTopicFor(null); }}
+                                            autoFocus
+                                          />
+                                          <Button size="sm" className="h-7 text-xs" onClick={() => void handleAddTopic(item.syllabusId, subject.subjectId)}>Add</Button>
+                                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAddingTopicFor(null)}>✕</Button>
+                                        </li>
+                                      )}
                                     </ul>
                                   </div>
                                 ))}
+                                {/* Add subject */}
+                                {addingSubjectFor === item.syllabusId ? (
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      placeholder="Subject name"
+                                      value={newSubjectName}
+                                      onChange={(e) => setNewSubjectName(e.target.value)}
+                                      className="h-8 text-sm"
+                                      onKeyDown={(e) => { if (e.key === "Enter") void handleAddSubject(item.syllabusId); if (e.key === "Escape") setAddingSubjectFor(null); }}
+                                      autoFocus
+                                    />
+                                    <Button size="sm" className="h-8" onClick={() => void handleAddSubject(item.syllabusId)}>Add</Button>
+                                    <Button size="sm" variant="ghost" className="h-8" onClick={() => setAddingSubjectFor(null)}>✕</Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-1"
+                                    onClick={() => { setAddingSubjectFor(item.syllabusId); setNewSubjectName(""); }}
+                                  >
+                                    <Plus className="size-3.5" />
+                                    Add subject
+                                  </Button>
+                                )}
                               </div>
                             )
                           ) : (
