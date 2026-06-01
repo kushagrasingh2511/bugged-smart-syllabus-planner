@@ -26,9 +26,13 @@ const taskSchema = new Schema(
       enum: ["low", "medium", "high"],
       default: "medium",
     },
+    completedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
+
+taskSchema.index({ userId: 1, status: 1 });
+taskSchema.index({ userId: 1, completedAt: 1 });
 
 export type TaskDocument = InferSchemaType<typeof taskSchema>;
 

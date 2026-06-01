@@ -3,6 +3,7 @@ import {
   BookOpen,
   Bot,
   CalendarDays,
+  CheckCircle2,
   Flame,
   LineChart,
   ListTodo,
@@ -10,9 +11,15 @@ import {
   Target,
 } from "lucide-react";
 
+import { RecoveryPanel } from "@/components/dashboard/recovery-panel";
+import { RevisionOverview } from "@/components/dashboard/revision-overview";
+import { UpcomingTasks } from "@/components/dashboard/upcoming-tasks";
 import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { ROUTES } from "@/lib/constants";
+import { getProgressSummary } from "@/lib/progress/summary";
+import { getRecoveryDashboardData } from "@/lib/recovery/dashboard";
+import { getRevisionDashboardBuckets } from "@/lib/revisions/list";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { FeatureCard } from "@/components/shared/feature-card";
 import { StatCard } from "@/components/shared/stat-card";
@@ -22,47 +29,77 @@ export const metadata: Metadata = {
   title: "Dashboard",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const session = await getSession();
   await connectDB();
-  const user = session
-    ? await User.findOne({ userId: session.userId }).lean()
-    : null;
+
+  const [user, summary, revisions, recovery] = await Promise.all([
+    session
+      ? User.findOne({ userId: session.userId }).lean()
+      : Promise.resolve(null),
+    session ? getProgressSummary(session.userId) : null,
+    session ? getRevisionDashboardBuckets(session.userId) : null,
+    session ? getRecoveryDashboardData(session.userId) : null,
+  ]);
 
   const firstName = user?.name?.split(" ")[0] ?? "Student";
+  const metrics = summary?.metrics;
+  const hasTasks = (metrics?.totalTasks ?? 0) > 0;
 
   return (
     <DashboardShell
       title={`Welcome back, ${firstName}`}
-      description="Jump into a module below. Your stats will populate as features roll out."
+      description={
+        hasTasks
+          ? "Your study progress updates as you complete tasks."
+          : "Generate a study plan to start tracking progress."
+      }
     >
       <div className="space-y-8">
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Tasks today"
-            value="—"
-            hint="Available after planner launch"
-            icon={ListTodo}
-          />
-          <StatCard
             label="Completion"
-            value="—"
-            hint="Track progress in Phase 4"
+            value={hasTasks ? `${metrics!.completionPercentage}%` : "0%"}
+            hint={
+              hasTasks
+                ? `${metrics!.completedTasks} of ${metrics!.totalTasks} tasks`
+                : "No tasks yet"
+            }
             icon={Target}
           />
           <StatCard
-            label="Study streak"
-            value="—"
-            hint="Build consistency over time"
-            icon={Flame}
+            label="Completed"
+            value={String(metrics?.completedTasks ?? 0)}
+            hint="Tasks marked done"
+            icon={CheckCircle2}
           />
           <StatCard
-            label="Subjects"
-            value="—"
-            hint="Add syllabus in Phase 2"
-            icon={BookOpen}
+            label="Remaining"
+            value={String(metrics?.remainingTasks ?? 0)}
+            hint="Still to finish"
+            icon={ListTodo}
+          />
+          <StatCard
+            label="Study streak"
+            value={`${metrics?.currentStreak ?? 0}d`}
+            hint={
+              (metrics?.studyDaysCompleted ?? 0) > 0
+                ? `${metrics!.studyDaysCompleted} study days total`
+                : "Complete a task to start"
+            }
+            icon={Flame}
           />
         </section>
+
+        <section>
+          <UpcomingTasks tasks={summary?.upcomingTasks ?? []} />
+        </section>
+
+        {recovery ? <RecoveryPanel initial={recovery} /> : null}
+
+        {revisions ? <RevisionOverview buckets={revisions} /> : null}
 
         <section>
           <div className="mb-4">

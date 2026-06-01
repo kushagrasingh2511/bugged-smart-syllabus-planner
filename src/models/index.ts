@@ -6,3 +6,4 @@ export { default as StudyPlan } from "./StudyPlan";
 export { default as Task } from "./Task";
 export { default as Progress } from "./Progress";
 export { default as Revision } from "./Revision";
+export { default as RecoveryPlan } from "./RecoveryPlan";

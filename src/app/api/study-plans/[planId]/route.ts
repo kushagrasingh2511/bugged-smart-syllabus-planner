@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { handleApiError, jsonError, jsonSuccess } from "@/lib/api";
+import Revision from "@/models/Revision";
 import StudyPlan from "@/models/StudyPlan";
 import Task from "@/models/Task";
 
@@ -62,6 +63,7 @@ export async function GET(_request: Request, context: RouteContext) {
         dueDate: t.dueDate,
         status: t.status,
         priority: t.priority,
+        completedAt: t.completedAt ?? null,
       })),
       tasksByDate,
     });
@@ -90,7 +92,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
       return jsonError("Study plan not found", 404);
     }
 
-    await Task.deleteMany({ planId });
+    await Promise.all([
+      Task.deleteMany({ planId }),
+      Revision.deleteMany({ planId, userId: session.userId }),
+    ]);
     await StudyPlan.deleteOne({ planId, userId: session.userId });
 
     return jsonSuccess({

@@ -17,11 +17,13 @@ const progressSchema = new Schema(
       default: 0,
     },
     streakDays: { type: Number, min: 0, default: 0 },
+    studyDaysCompleted: { type: Number, min: 0, default: 0 },
     lastStudyDate: { type: Date },
   },
   { timestamps: true },
 );
 
+/** One global row per user (no subjectId); optional per-subject rows when subjectId is set. */
 progressSchema.index({ userId: 1, subjectId: 1 }, { unique: true, sparse: true });
 
 export type ProgressDocument = InferSchemaType<typeof progressSchema>;

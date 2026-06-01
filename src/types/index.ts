@@ -12,3 +12,24 @@ export type ApiError = {
 export type ApiSuccess<T> = {
   data: T;
 };
+
+export type {
+  ProgressSummary,
+  ProgressMetrics,
+  ProgressCharts,
+  TaskSummaryItem,
+} from "@/types/progress";
+
+export type {
+  RevisionItem,
+  RevisionListResponse,
+  RevisionDisplayStatus,
+  GenerateRevisionsResult,
+} from "@/types/revision";
+
+export type {
+  RecoverySummary,
+  RecoveryDashboardData,
+  RecoveryRecommendation,
+  RecoveryCharts,
+} from "@/types/recovery";
