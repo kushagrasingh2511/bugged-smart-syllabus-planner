@@ -6,7 +6,6 @@ import {
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
 } from "@/lib/validations/syllabus";
-import { saveSyllabusFile } from "@/lib/storage/syllabus-files";
 import { scheduleSyllabusExtraction } from "@/lib/syllabus/run-extraction";
 import Syllabus from "@/models/Syllabus";
 
@@ -72,12 +71,11 @@ export async function POST(request: Request) {
       extractionStatus: "pending",
     });
 
-    const fileUrl = await saveSyllabusFile(
-      session.userId,
-      syllabus.syllabusId,
-      file,
-    );
-    syllabus.fileUrl = fileUrl;
+    // Store file as base64 in rawContent so extraction works on serverless
+    // environments (Vercel) where the filesystem is read-only.
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const base64 = buffer.toString("base64");
+    syllabus.rawContent = `data:application/pdf;base64,${base64}`;
     await syllabus.save();
 
     scheduleSyllabusExtraction(syllabus.syllabusId, session.userId);

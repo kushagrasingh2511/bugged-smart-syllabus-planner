@@ -1,5 +1,4 @@
 import { connectDB } from "@/lib/db";
-import { readSyllabusFile } from "@/lib/storage/syllabus-files";
 import type { ExtractionResult } from "@/lib/validations/extraction";
 import Subject from "@/models/Subject";
 import Syllabus, { type SyllabusDocument } from "@/models/Syllabus";
@@ -80,10 +79,30 @@ async function loadExtractionInput(
     return provider.extractFromManualText(syllabus.rawContent);
   }
 
-  if (!syllabus.fileUrl) {
-    throw new Error("Syllabus file is missing");
+  // For pdf and image: content is stored as a base64 data URL in rawContent
+  // (e.g. "data:application/pdf;base64,..." or "data:image/png;base64,...")
+  // This works in both local dev and serverless (Vercel) environments.
+  if (syllabus.rawContent?.startsWith("data:")) {
+    const [header, base64Data] = syllabus.rawContent.split(",");
+    if (!base64Data) {
+      throw new Error("Stored file data is malformed");
+    }
+    const mimeMatch = header?.match(/data:([^;]+);base64/);
+    const mimeType = mimeMatch?.[1] ?? "application/octet-stream";
+    const buffer = Buffer.from(base64Data, "base64");
+
+    if (mimeType === "application/pdf") {
+      return provider.extractFromStoredFile(buffer, "file.pdf");
+    }
+    // Image types
+    return provider.extractFromStoredFile(buffer, `file.${mimeType.split("/")[1] ?? "jpg"}`);
   }
 
+  // Legacy path: file stored on disk (local dev only)
+  if (!syllabus.fileUrl) {
+    throw new Error("Syllabus file is missing — no rawContent or fileUrl");
+  }
+  const { readSyllabusFile } = await import("@/lib/storage/syllabus-files");
   const buffer = await readSyllabusFile(syllabus.fileUrl);
   return provider.extractFromStoredFile(buffer, syllabus.fileUrl);
 }
