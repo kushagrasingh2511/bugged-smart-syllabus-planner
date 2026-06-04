@@ -14,7 +14,9 @@ function formatDueDate(iso: string): string {
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   if (diff < 0) return `${Math.abs(diff)}d overdue`;
-  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  // Use "en-US" explicitly so server (Vercel) and client produce identical output
+  // and avoid React hydration mismatches from locale differences.
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
 const priorityConfig: Record<string, { variant: "default" | "secondary" | "destructive"; color: string }> = {

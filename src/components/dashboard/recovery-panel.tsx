@@ -25,7 +25,7 @@ async function readApiError(response: Response): Promise<string> {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString("en-US", {
     weekday: "short", month: "short", day: "numeric",
   });
 }

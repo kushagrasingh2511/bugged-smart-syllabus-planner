@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { RecoveryMovedTask, RecoveryScheduleDay } from "@/types/recovery";
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function MovedTasksTimeline({ movedTasks }: { movedTasks: RecoveryMovedTask[] }) {

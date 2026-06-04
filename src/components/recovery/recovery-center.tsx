@@ -127,7 +127,7 @@ export function RecoveryCenter({ initial }: { initial: RecoveryDashboardData }) 
             <div>
               <h2 className="font-semibold">{recovery.planTitle}</h2>
               <p className="text-xs text-muted-foreground">
-                Generated {new Date(recovery.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                Generated {new Date(recovery.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
             </div>
             <Badge

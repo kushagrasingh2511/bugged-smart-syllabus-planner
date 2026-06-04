@@ -27,10 +27,10 @@ export function DashboardShell({
         <MobileHeader title={title} onLogout={() => void handleLogout()} />
 
         {/* Desktop page header */}
-        <header className="hidden shrink-0 border-b border-border/60 bg-background/80 px-8 py-5 backdrop-blur-xl lg:block">
-          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        <header className="hidden shrink-0 border-b border-border/60 bg-background/80 px-8 py-6 backdrop-blur-xl lg:block">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
           {description && (
-            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-2 max-w-2xl text-[0.9375rem] text-muted-foreground leading-relaxed">
               {description}
             </p>
           )}

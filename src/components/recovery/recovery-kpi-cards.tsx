@@ -4,7 +4,7 @@ import type { RecoverySummary } from "@/types/recovery";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "Unknown";
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export function RecoveryKpiCards({ recovery }: { recovery: RecoverySummary }) {

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { RevisionItem, RevisionListResponse } from "@/types/revision";
 
 function formatDueDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function revisionLabel(item: RevisionItem): string {

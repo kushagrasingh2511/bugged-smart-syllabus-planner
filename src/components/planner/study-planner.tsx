@@ -29,7 +29,7 @@ async function readApiError(response: Response): Promise<string> {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -243,26 +243,36 @@ export function StudyPlanner() {
       {showGenerate && readySyllabi && (
         <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card">
           <div className="flex items-center gap-2 border-b border-border/60 px-6 py-4">
-            <div className="flex size-8 items-center justify-center rounded-xl bg-primary/15">
+            <div className="flex size-8 items-center justify-center rounded-[20px] bg-primary/15">
               <Sparkles className="size-4 text-primary" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold">Generate study plan</h2>
+              <h2 className="text-lg font-semibold text-foreground">Generate study plan</h2>
               <p className="text-xs text-muted-foreground">Tasks are spread from tomorrow until the day before your exam.</p>
             </div>
           </div>
           <form onSubmit={handleGenerate} className="space-y-5 p-6">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5">
-                <Label htmlFor="plan-title" className="text-sm font-medium">Plan title</Label>
+                <Label htmlFor="plan-title" className="text-sm font-semibold text-foreground">Plan title</Label>
                 <Input id="plan-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Midterm prep" required className="h-10" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="exam-date" className="text-sm font-medium">Exam date</Label>
-                <Input id="exam-date" type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} required className="h-10" />
+                <Label htmlFor="exam-date" className="text-sm font-semibold text-foreground">Exam date</Label>
+                <div className="relative">
+                  <Input
+                    id="exam-date"
+                    type="date"
+                    value={examDate}
+                    onChange={(e) => setExamDate(e.target.value)}
+                    required
+                    className="h-10 pr-10 [color-scheme:dark]"
+                  />
+                  <CalendarDays className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="daily-hours" className="text-sm font-medium">Daily hours</Label>
+                <Label htmlFor="daily-hours" className="text-sm font-semibold text-foreground">Daily hours</Label>
                 <Input id="daily-hours" type="number" min={0.5} max={16} step={0.5} value={dailyStudyHours} onChange={(e) => setDailyStudyHours(e.target.value)} required className="h-10" />
               </div>
             </div>

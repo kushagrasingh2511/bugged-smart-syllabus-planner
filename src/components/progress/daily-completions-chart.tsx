@@ -6,7 +6,7 @@ import type { DailyCompletionPoint } from "@/types/progress";
 type Props = { dailyCompletions: DailyCompletionPoint[] };
 
 function fmt(dateStr: string) {
-  return new Date(dateStr + "T00:00:00Z").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return new Date(dateStr + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export function DailyCompletionsChart({ dailyCompletions }: Props) {
