@@ -30,13 +30,16 @@ export async function POST(request: Request) {
       email: user.email,
     });
 
-    const response = jsonSuccess({
-      user: {
-        userId: user.userId,
-        name: user.name,
-        email: user.email,
+    const response = jsonSuccess(
+      {
+        user: {
+          userId: user.userId,
+          name: user.name,
+          email: user.email,
+        },
       },
-    });
+      201,
+    );
 
     response.cookies.set(sessionCookieOptions(token));
     return response;

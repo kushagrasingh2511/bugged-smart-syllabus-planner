@@ -59,7 +59,10 @@ export async function extractFromImageBuffer(
 ): Promise<ExtractionResult> {
   const base64 = buffer.toString("base64");
   const content: GroqContentPart[] = [
-    { type: "text", text: "Extract subjects and topics from this syllabus image." },
+    {
+      type: "text",
+      text: "Extract subjects and topics from this syllabus image. Return ONLY valid JSON matching: {\"subjects\":[{\"subjectName\":\"string\",\"topics\":[{\"topicName\":\"string\",\"difficulty\":3}]}]}. No explanation, no markdown, just the JSON object.",
+    },
     {
       type: "image_url",
       image_url: { url: `data:${mimeType};base64,${base64}` },
