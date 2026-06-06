@@ -1,6 +1,6 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -54,14 +54,14 @@ export function StatCard({
   label,
   value,
   hint,
-  icon: Icon,
+  icon,
   className,
   accent = "primary",
 }: {
   label: string;
   value: string;
   hint?: string;
-  icon: LucideIcon;
+  icon: ReactNode;
   className?: string;
   accent?: Accent;
 }) {
@@ -104,7 +104,7 @@ export function StatCard({
             cfg.icon,
           )}
         >
-          <Icon className="size-5" strokeWidth={2} />
+          {icon}
         </div>
       </div>
     </motion.div>

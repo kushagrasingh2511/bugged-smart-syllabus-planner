@@ -7,3 +7,4 @@ export { default as Task } from "./Task";
 export { default as Progress } from "./Progress";
 export { default as Revision } from "./Revision";
 export { default as RecoveryPlan } from "./RecoveryPlan";
+export { default as Notification } from "./Notification";

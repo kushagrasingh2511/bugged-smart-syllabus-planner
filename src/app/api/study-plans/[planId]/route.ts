@@ -29,7 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
       return jsonError("Study plan not found", 404);
     }
 
-    const tasks = await Task.find({ planId })
+    const tasks = await Task.find({ planId, userId: session.userId })
       .sort({ dueDate: 1, priority: -1 })
       .lean();
 
@@ -93,7 +93,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
 
     await Promise.all([
-      Task.deleteMany({ planId }),
+      Task.deleteMany({ planId, userId: session.userId }),
       Revision.deleteMany({ planId, userId: session.userId }),
     ]);
     await StudyPlan.deleteOne({ planId, userId: session.userId });

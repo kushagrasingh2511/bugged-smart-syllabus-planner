@@ -108,13 +108,13 @@ export default async function DashboardPage() {
             label="Completion"
             value={hasTasks ? `${metrics!.completionPercentage}%` : "0%"}
             hint={hasTasks ? `${metrics!.completedTasks} of ${metrics!.totalTasks} tasks` : "No tasks yet"}
-            icon={Target}
+            icon={<Target className="size-5" strokeWidth={2} />}
           />
           <StatCard
             label="Study streak"
             value={`${metrics?.currentStreak ?? 0}d`}
             hint={(metrics?.studyDaysCompleted ?? 0) > 0 ? `${metrics!.studyDaysCompleted} days studied` : "Complete a task to start"}
-            icon={Flame}
+            icon={<Flame className="size-5" strokeWidth={2} />}
             accent="amber"
           />
           {daysUntilExam !== null ? (
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
               label="Remaining"
               value={String(metrics?.remainingTasks ?? 0)}
               hint="Tasks still to finish"
-              icon={ListTodo}
+              icon={<ListTodo className="size-5" strokeWidth={2} />}
               accent="rose"
             />
           )}
@@ -143,20 +143,20 @@ export default async function DashboardPage() {
             label="Completed tasks"
             value={String(metrics?.completedTasks ?? 0)}
             hint="Tasks marked done"
-            icon={CheckCircle2}
+            icon={<CheckCircle2 className="size-5" strokeWidth={2} />}
             accent="emerald"
           />
           <StatCard
             label="Total tasks"
             value={String(metrics?.totalTasks ?? 0)}
             hint="Across all study plans"
-            icon={Target}
+            icon={<Target className="size-5" strokeWidth={2} />}
           />
           <StatCard
             label="Pending"
             value={String(metrics?.remainingTasks ?? 0)}
             hint="Still to complete"
-            icon={ListTodo}
+            icon={<ListTodo className="size-5" strokeWidth={2} />}
             accent="amber"
           />
         </section>

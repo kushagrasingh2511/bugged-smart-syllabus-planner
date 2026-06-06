@@ -9,6 +9,35 @@ export function recoveryPlanToSummary(
   planTitle: string,
 ): RecoverySummary {
   const d = doc as RecoveryPlanDocument;
+
+  // Explicitly map every nested subdocument field to strip Mongoose internals
+  // (_id buffers, toJSON methods) before crossing the server/client boundary.
+  const recommendations: RecoveryRecommendation[] = (
+    d.recommendations as RecoveryRecommendation[]
+  ).map((r) => ({
+    type: r.type,
+    message: r.message,
+    severity: r.severity,
+  }));
+
+  const rawCharts = d.charts as RecoveryCharts;
+  const charts: RecoveryCharts = {
+    hoursByDay: {
+      labels: [...rawCharts.hoursByDay.labels],
+      datasets: rawCharts.hoursByDay.datasets.map((ds) => ({
+        label: ds.label,
+        data: [...ds.data],
+      })),
+    },
+    workload: {
+      labels: [...rawCharts.workload.labels],
+      datasets: rawCharts.workload.datasets.map((ds) => ({
+        label: ds.label,
+        data: [...ds.data],
+      })),
+    },
+  };
+
   return serializeRecoveryPlan(
     {
       recoveryId: d.recoveryId,
@@ -49,8 +78,8 @@ export function recoveryPlanToSummary(
           isRecovery: t.isRecovery ?? true,
         })),
       })),
-      recommendations: d.recommendations as RecoveryRecommendation[],
-      charts: d.charts as RecoveryCharts,
+      recommendations,
+      charts,
       createdAt: d.createdAt,
     },
     planTitle,
